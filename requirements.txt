@@ -1,0 +1,26 @@
+tensorflow>=2.10.0
+opencv-python>=4.7.0
+numpy>=1.23.0
+Pillow>=9.4.0
+pycryptodome>=3.17.0
+scikit-image>=0.20.0
+matplotlib>=3.7.0
+
+
+
+# image_steganography/
+# ├── models/
+# │   ├── autoencoder.py       # CNN autoencoder for text encoding
+# │   └── trained_model.h5     # Saved model weights
+# ├── core/
+# │   ├── encoder.py           # Text → Latent → Embed in image
+# │   ├── decoder.py           # Extract from image → Latent → Text
+# │   ├── lsb.py               # LSB embedding/extraction logic
+# │   └── encryption.py        # AES password encryption
+# ├── utils/
+# │   ├── metrics.py           # PSNR, SSIM, histogram analysis
+# │   ├── capacity.py          # Calculate embedding capacity
+# │   └── image_utils.py       # Image preprocessing helpers
+# ├── app.py                  # Entry point
+# ├── requirements.txt         # Dependencies
+# └── README.md                # Setup & usage documentation
