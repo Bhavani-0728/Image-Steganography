@@ -4,54 +4,58 @@ from tensorflow.keras import layers, models
 
 class ImageAutoencoder:
 
-    def __init__(self, latent_channels=8):     
+    def __init__(self, latent_channels=8):
         self.latent_channels = latent_channels
         self.encoder, self.decoder, self.autoencoder = self.build()
 
     def build(self):
 
-        # ---------- ENCODER ----------
-        inp = layers.Input(shape=(None, None, 3))
+        inp = layers.Input(shape=(64, 64, 3))   # fixed training size
 
-        x = layers.Conv2D(32, 3, padding="same", activation="relu")(inp)
-        x = layers.MaxPool2D()(x)
+        # ------------ ENCODER ------------
+        c1 = layers.Conv2D(32, 3, padding="same", activation="relu")(inp)
+        p1 = layers.MaxPool2D()(c1)
 
-        x = layers.Conv2D(64, 3, padding="same", activation="relu")(x)
-        x = layers.MaxPool2D()(x)
+        c2 = layers.Conv2D(64, 3, padding="same", activation="relu")(p1)
+        p2 = layers.MaxPool2D()(c2)
 
-        latent = layers.Conv2D(
+        bottleneck = layers.Conv2D(
             self.latent_channels,
             3,
             padding="same",
-            activation="relu",
-            name="latent_space"
-        )(x)
+            activation="relu"
+        )(p2)
 
-        encoder = models.Model(inp, latent, name="encoder")
+        # ------------ DECODER (with skip connections) ------------
+        u1 = layers.UpSampling2D()(bottleneck)
+        m1 = layers.Concatenate()([u1, c2])
+        c3 = layers.Conv2D(64, 3, padding="same", activation="relu")(m1)
 
-        # ---------- DECODER ----------
-        dec_in = layers.Input(shape=(None, None, self.latent_channels))
+        u2 = layers.UpSampling2D()(c3)
+        m2 = layers.Concatenate()([u2, c1])
+        c4 = layers.Conv2D(32, 3, padding="same", activation="relu")(m2)
 
-        x = layers.Conv2DTranspose(64, 3, strides=2, padding="same", activation="relu")(dec_in)
-        x = layers.Conv2DTranspose(32, 3, strides=2, padding="same", activation="relu")(x)
+        out = layers.Conv2D(3, 3, padding="same", activation="sigmoid")(c4)
 
-        out = layers.Conv2D(3, 3, padding="same", activation="sigmoid")(x)
+        auto = models.Model(inp, out)
 
-        decoder = models.Model(dec_in, out, name="decoder")
+        auto.compile(
+            optimizer="adam",
+            loss="mse",
+            metrics=["mse"]
+        )
 
-        # ---------- AUTOENCODER ----------
-        out_full = decoder(encoder(inp))
-        auto = models.Model(inp, out_full)
+        encoder = models.Model(inp, bottleneck)
+        decoder = None  # not needed separately here
 
-        auto.compile(optimizer="adam", loss="mse")
+        return encoder, None, auto
 
-        return encoder, decoder, auto
+    # ---------------- INFERENCE HELPERS ----------------
 
     def encode(self, img):
+        img = cv2.resize(img, (64, 64))
         img = img.astype("float32") / 255.0
-        latent = self.encoder.predict(img[None, ...], verbose=0)[0]
-        return latent.astype("float32")
+        return self.encoder.predict(img[None, ...], verbose=0)[0]
 
-    def decode(self, latent):
-        result = self.decoder.predict(latent[None, ...], verbose=0)[0]
-        return (result * 255).clip(0, 255).astype("uint8")
+    def decode_from_auto(self, latent):
+        pass  # optional if you want separate decode

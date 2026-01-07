@@ -1,0 +1,43 @@
+# ---- Python cache ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ---- Virtual environment ----
+venv/
+env/
+.venv/
+
+# ---- IDE project files ----
+.vscode/
+.idea/
+
+# ---- OS specific ----
+.DS_Store
+Thumbs.db
+
+# ---- Model weights ----
+models/*.h5
+models/*.keras
+models/*.weights.h5
+
+# ---- Training logs ----
+*.csv
+*.log
+
+# ---- Datasets ----
+dataset/
+data/
+datasets/
+
+# ---- Streamlit cache ----
+.streamlit/
+
+# ---- Temporary files ----
+tmp/
+temp/
+*.tmp
+
+# ---- Notebook checkpoints ----
+.ipynb_checkpoints/
